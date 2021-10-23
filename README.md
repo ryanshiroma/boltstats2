@@ -10,11 +10,11 @@ In short it will consist of two parts:
  2. an interface to pull and visualize the data(website, flask app, or python library)
 
 
-![diagram](flowchart.png)
+![diagram](images/flowchart.png)
 
 ### what is voltstats.net?
 voltstats.net was a website that tracked vehicle diagnostic data using General Motor's OnStar service. Example data points include odometer readings, battery level, and charge status. Sadly, as of April 24th, 2021, the website stopped collecting new data
-![voltstats](voltstats.jpg)
+![voltstats](images/voltstats.jpg)
 https://www.voltstats.net/boltev/stats/details/13187
 
 
@@ -42,7 +42,12 @@ The first of the two parts is to continuously collect the diagnostic data on a s
 
 
 
-![dynamodb](dynamodb.png)
+![dynamodb](images/dynamodb.png)
 
 
 ## Part 2 (Data Visualization)
+
+WIP!
+run `plotly_charts.py` to export an html of plotly charts for Odometer and Battery Level readings.
+
+![plotly_html](images/plotly.png)

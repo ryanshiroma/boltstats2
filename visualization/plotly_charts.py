@@ -12,13 +12,13 @@ def main():
     dynamodb_client = boto3.client('dynamodb', region_name="us-east-1")
     ddb_data = []
     for d in ['EV BATTERY LEVEL','ODOMETER']:
-    ddb_data += dynamodb_client.query(
-                            TableName=TABLE_NAME,
-                            KeyConditionExpression='diagnosticElement = :diagnosticElement',
-                            ExpressionAttributeValues={
-                                ':diagnosticElement': {'S': d}
-                            }
-                            )['Items']
+        ddb_data += dynamodb_client.query(
+                                TableName=TABLE_NAME,
+                                KeyConditionExpression='diagnosticElement = :diagnosticElement',
+                                ExpressionAttributeValues={
+                                    ':diagnosticElement': {'S': d}
+                                }
+                                )['Items']
     df = pd.DataFrame(ddb_data)
 
     # clean up data
@@ -47,8 +47,8 @@ def main():
             fig.update_yaxes(title_text=units[e], row=i+1, col=1,tickformat= ',.0%')
         else:
             fig.update_yaxes(title_text=units[e], row=i+1, col=1)
-            
-    fig.update_layout(title_text="Bolt EV Diagnostic Data", height=1700)
+
+    fig.update_layout(title_text="Bolt EV Diagnostic Data", height=1200)
     fig.write_html("diagnostic_charts.html")
 
 if __name__ == '__main__':
