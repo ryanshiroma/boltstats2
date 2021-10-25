@@ -1,4 +1,3 @@
-*note: Currently doesn't work every time because the chevy API call can take more than the 30 second AWS API Gateway timeout... :(. Currently investigating a better solution to split the request and recieve into separate parts. The script will still work just fine if you run it locally or in an environment without a timeout.*
  # Bolt Stats
 
 ### What is Bolt Stats?
@@ -34,7 +33,7 @@ The first of the two parts is to continuously collect the diagnostic data on a s
 ```
 *use https://www.uuidgenerator.net/version4 to generate an actual new random v4 UUID for the deviceId*
 
-3. create a `CloudWatch Events` trigger with schedule expression: `cron(0/20 * * * ? *)`
+3. create a `CloudWatch Events` trigger with schedule expression `cron(0/20 * * * ? *)` to trigger the job every 30 minutes.
 
 4. create a `DynamoDB` table called boltstatsJS using 
    - Partition key: 'diagnosticElement' (String)
