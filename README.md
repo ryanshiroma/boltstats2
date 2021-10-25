@@ -1,4 +1,4 @@
-
+*note: Currently doesn't work every time because the chevy API call can take more than the 30 second AWS API Gateway timeout... :(. Currently investigating a better solution to split the request and recieve into separate parts. The script will still work just fine if you run it locally or in an environment without a timeout.*
  # Bolt Stats
 
 ### What is Bolt Stats?
