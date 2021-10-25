@@ -52,8 +52,8 @@ const onStarCall = async (credsJSON) => {
     
         // Optional
         checkRequestStatus: true, // When false, requests are complete when 'In Progress' (Much faster).
-        requestPollingIntervalSeconds: 6, // When checkRequestStatus is true, this is how often status check requests will be made
-        requestPollingTimeoutSeconds: 60, // When checkRequestStatus is true, this is when requests while polling are considered timed out
+        requestPollingIntervalSeconds: 20, // When checkRequestStatus is true, this is how often status check requests will be made
+        requestPollingTimeoutSeconds: 120, // When checkRequestStatus is true, this is when requests while polling are considered timed out
     };
 
     
