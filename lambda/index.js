@@ -4,23 +4,7 @@ const ssm = new AWS.SSM({region: 'us-east-1'});
 
 
 
-exports.handler = async (event) => {
-
-    const creds = await getCredentials();
-    console.log('got creds');
-    
-    await onStarCall(creds);
-    console.log('called onstar');
-    
-    const response = {
-        statusCode: 200,
-        body: 'Complete!',
-    };
-    return response;
- }
-
-
-const getCredentials = async () => {
+async function  getCredentials() {
     let ssmParameters = {Name:'mychevrolet',WithDecryption:true};
     try{
         let responseFromSSM = await ssm.getParameter(ssmParameters).promise();
@@ -31,10 +15,7 @@ const getCredentials = async () => {
     }
 }
 
-
-
-
-const onStarCall = async (credsJSON) => {
+async function onStarCall(credsJSON) {
     
     const mychevy_credentials = JSON.parse(credsJSON);
     const deviceId = mychevy_credentials.deviceId;
@@ -53,17 +34,11 @@ const onStarCall = async (credsJSON) => {
         // Optional
         checkRequestStatus: true, // When false, requests are complete when 'In Progress' (Much faster).
         requestPollingIntervalSeconds: 20, // When checkRequestStatus is true, this is how often status check requests will be made
-        requestPollingTimeoutSeconds: 120, // When checkRequestStatus is true, this is when requests while polling are considered timed out
+        requestPollingTimeoutSeconds: 180, // When checkRequestStatus is true, this is when requests while polling are considered timed out
     };
 
-    
+
     const onStar = OnStar.create(onStarConfig);
-    
-    AWS.config.update({region: 'us-east-1'});
-    var ddb = new AWS.DynamoDB.DocumentClient();
-    var table = "boltstatsJS";
-    
-    console.log('created config');
     
     const options = ["ENGINE COOLANT TEMP", "ENGINE RPM", "LAST TRIP FUEL ECONOMY", "EV ESTIMATED CHARGE END", 
                 "EV BATTERY LEVEL", "OIL LIFE", "EV PLUG VOLTAGE", "LIFETIME FUEL ECON", "HOTSPOT CONFIG", 
@@ -72,13 +47,25 @@ const onStarCall = async (credsJSON) => {
                 "INTERM VOLT BATT VOLT", "GET COMMUTE SCHEDULE", "GET CHARGE MODE", "EV SCHEDULED CHARGE START", 
                 "FUEL TANK INFO", "HANDS FREE CALLING", "ENERGY EFFICIENCY", "VEHICLE RANGE"];
     
-                
-    const allDiagnostics = await onStar.diagnostics({"diagnosticItem": options}).catch(e => { console.log(e); });
+    try {
+        let allDiagnostics = await onStar.diagnostics({"diagnosticItem": options});
+        return allDiagnostics.response.data.commandResponse.body.diagnosticResponse;
+    } catch (err) {
+        if (err.getResponse) {
+            console.log(JSON.stringify(err.getResponse().data));
+        }
+    }
+  };
 
-    console.log(allDiagnostics.response.data.commandResponse.body.diagnosticResponse);
-    console.log('finished pull')
-    for (let group = 0; group < allDiagnostics.response.data.commandResponse.body.diagnosticResponse.length; group++) {
-        let diagnosticGroup = allDiagnostics.response.data.commandResponse.body.diagnosticResponse[group];
+async function saveToDDB(response) {
+
+    AWS.config.update({region: 'us-east-1'});
+    var ddb = new AWS.DynamoDB.DocumentClient();
+    var table = "boltstatsJS";
+
+    console.log(response);
+    for (let group = 0; group < response.length; group++) {
+        let diagnosticGroup = response[group];
         let groupName = diagnosticGroup.name;
         let groupElements = diagnosticGroup.diagnosticElement;
         for (let element = 0; element < groupElements.length; element++) {
@@ -94,13 +81,32 @@ const onStarCall = async (credsJSON) => {
                                 ElementUnit: elementObj.hasOwnProperty('unit') ? elementObj.unit : 'NA'
                                 }
                             };
-            ddb.put(ddbItem, function(err, ddbItem) {
-                if (err) {
-                console.log("Error", ddbItem);
-                } else {
-                console.log("Success", ddbItem);
-                }
-            });
+            try {
+                await ddb.put(answersParams).promise();
+            } catch (error) {
+                console.log("Error", error,ddbItem);           
+            };
         }
       }
-  };
+      return 'Success'
+  }
+
+
+
+exports.handler = async (event) => {
+
+    const creds = await getCredentials();
+    console.log('got creds');
+    
+    const response = await onStarCall(creds);
+    console.log('pulled onstar');
+
+    const status = await saveToDDB(response);
+    console.log(status);
+    console.log('saved to DynamoDB');
+
+    return {
+        statusCode: 200,
+        body: 'Complete!',
+    };
+ }
