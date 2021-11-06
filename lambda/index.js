@@ -49,7 +49,7 @@ async function onStarCall(credsJSON) {
     
     try {
         let allDiagnostics = await onStar.diagnostics({"diagnosticItem": options});
-        return allDiagnostics.response.data.commandResponse.body.diagnosticResponse;
+        return allDiagnostics;
     } catch (err) {
         if (err.getResponse) {
             console.log(JSON.stringify(err.getResponse().data));
@@ -57,12 +57,12 @@ async function onStarCall(credsJSON) {
     }
   };
 
-async function saveToDDB(response) {
+async function saveToDDB(raw_response) {
 
     AWS.config.update({region: 'us-east-1'});
     var ddb = new AWS.DynamoDB.DocumentClient();
     var table = "boltstatsJS";
-
+    response = raw_response.response.data.commandResponse.body.diagnosticResponse;
     console.log(response);
     for (let group = 0; group < response.length; group++) {
         let diagnosticGroup = response[group];
@@ -82,7 +82,7 @@ async function saveToDDB(response) {
                                 }
                             };
             try {
-                await ddb.put(answersParams).promise();
+                await ddb.put(ddbItem).promise();
             } catch (error) {
                 console.log("Error", error,ddbItem);           
             };
@@ -92,16 +92,15 @@ async function saveToDDB(response) {
   }
 
 
-
 exports.handler = async (event) => {
 
     const creds = await getCredentials();
     console.log('got creds');
     
-    const response = await onStarCall(creds);
+    const raw_response = await onStarCall(creds);
     console.log('pulled onstar');
 
-    const status = await saveToDDB(response);
+    const status = await saveToDDB(raw_response);
     console.log(status);
     console.log('saved to DynamoDB');
 
